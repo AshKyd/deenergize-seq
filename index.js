@@ -1,6 +1,12 @@
 import { createRestAPIClient } from "masto";
 import fs from "fs";
-const secrets = JSON.parse(fs.readFileSync("./secrets.json"));
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const secrets = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, "./secrets.json"))
+);
 function doFetch() {
   return fetch(
     "https://www.energex.com.au/static/Energex/energex_po_current_unplanned.geojson"
@@ -93,7 +99,9 @@ function postIncident(incident) {
 
 let seenIncidents = (() => {
   try {
-    return JSON.parse(fs.readFileSync("./seenIncidents.json"));
+    return JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, "./seenIncidents.json"))
+    );
   } catch (e) {
     return null;
   }
@@ -123,7 +131,10 @@ async function go() {
 
   console.log(newIncidents.length, "new incidents");
   seenIncidents.push(...newIncidents.map((incident) => incident.id));
-  fs.writeFileSync("./seenIncidents.json", JSON.stringify(seenIncidents));
+  fs.writeFileSync(
+    path.resolve(__dirname, "./seenIncidents.json"),
+    JSON.stringify(seenIncidents)
+  );
 
   if (!newIncidents.length) {
     return;
