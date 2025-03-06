@@ -139,8 +139,8 @@ async function go() {
   console.log(newIncidents.length, "new incidents");
   state.seenIncidents.push(...newIncidents.map((incident) => incident.id));
   const shouldPostSummary =
-    (newIncidents && !state.lastSummary) ||
-    state.lastSummary < Date.now() - 1000 * 60 * 10;
+    newIncidents.length &&
+    (!state.lastSummary || state.lastSummary < Date.now() - 1000 * 60 * 10);
   if (shouldPostSummary) {
     state.lastSummary = Date.now();
   }
