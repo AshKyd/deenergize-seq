@@ -115,7 +115,6 @@ function pluralise(count, singular, plural) {
 }
 
 async function go() {
-  console.log("fetching data");
   const json = await doFetch();
   //   const json = JSON.parse(fs.readFileSync("./example.json"));
   const { incidentCount, incidentTypes, affectedCustomers, parsedIncidents } =
@@ -157,4 +156,5 @@ async function go() {
   }, 1000 * 60);
 }
 
+console.log("Starting fetch", new Date());
 go();
