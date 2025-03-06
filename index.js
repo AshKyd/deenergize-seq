@@ -2,6 +2,7 @@ import { createRestAPIClient } from "masto";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { BskyAgent } from "@atproto/api";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const secrets = JSON.parse(
@@ -73,7 +74,7 @@ function parse(geojson) {
   return { incidentCount, incidentTypes, affectedCustomers, parsedIncidents };
 }
 
-function post(status) {
+async function post(status) {
   const masto = createRestAPIClient({
     url: "https://mastodon.social",
     accessToken: secrets.accessToken,
@@ -81,13 +82,31 @@ function post(status) {
 
   console.log("tooting", status);
 
-  return masto.v1.statuses
+  masto.v1.statuses
     .create({
       status: status,
       visibility: "unlisted",
     })
     .catch((e) => {
-      console.error("couldn't post", e.message);
+      console.error("couldn't post to mastodon", e.message);
+    });
+
+  const agent = new BskyAgent({
+    service: "https://bsky.social",
+  });
+  agent
+    .login({
+      identifier: secrets.bskyUser,
+      password: secrets.bskyPass,
+    })
+    .then(() =>
+      agent.post({
+        text: status,
+        createdAt: new Date().toISOString(),
+      })
+    )
+    .catch((e) => {
+      console.log("couldn't post to bsky", e.message);
     });
 }
 
@@ -97,21 +116,11 @@ function postIncident(incident) {
   return post(toot);
 }
 
-let seenIncidents = (() => {
-  try {
-    return JSON.parse(
-      fs.readFileSync(path.resolve(__dirname, "./seenIncidents.json"))
-    );
-  } catch (e) {
-    return null;
-  }
-})();
-
 let state = (() => {
   try {
     return JSON.parse(fs.readFileSync(path.resolve(__dirname, "./state.json")));
   } catch (e) {
-    return { seenIncidents };
+    return {};
   }
 })();
 
@@ -144,10 +153,6 @@ async function go() {
   if (shouldPostSummary) {
     state.lastSummary = Date.now();
   }
-  fs.writeFileSync(
-    path.resolve(__dirname, "./seenIncidents.json"),
-    JSON.stringify(state.seenIncidents)
-  );
   fs.writeFileSync(
     path.resolve(__dirname, "./state.json"),
     JSON.stringify(state)
