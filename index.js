@@ -1,9 +1,9 @@
 import { createRestAPIClient } from "masto";
 import fs from "fs";
-import { dirname } from "path";
+import path from "path";
 import { fileURLToPath } from "url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const secrets = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, "./secrets.json"))
 );
