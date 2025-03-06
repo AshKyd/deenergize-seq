@@ -81,14 +81,14 @@ function post(status) {
 
   console.log("tooting", status);
 
-  //   return masto.v1.statuses
-  //     .create({
-  //       status: status,
-  //       visibility: "unlisted",
-  //     })
-  //     .catch((e) => {
-  //       console.error("couldn't post", e.message);
-  //     });
+  return masto.v1.statuses
+    .create({
+      status: status,
+      visibility: "unlisted",
+    })
+    .catch((e) => {
+      console.error("couldn't post", e.message);
+    });
 }
 
 function postIncident(incident) {
