@@ -1,0 +1,15 @@
+{
+  "name": "deenergize-seq",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "masto": "^6.10.3"
+  },
+  "type": "module"
+}
