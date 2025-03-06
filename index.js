@@ -146,5 +146,4 @@ async function go() {
   }, 1000 * 60);
 }
 
-setInterval(go, 1000 * 60 * 3.3);
 go();
