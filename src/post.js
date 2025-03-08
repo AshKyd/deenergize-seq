@@ -3,7 +3,6 @@ import { BskyAgent } from "@atproto/api";
 import { read } from "./fs.js";
 const secrets = JSON.parse(read("secrets.json"));
 export async function post(status) {
-  return console.log("toot", status);
   const masto = createRestAPIClient({
     url: "https://mastodon.social",
     accessToken: secrets.accessToken,
