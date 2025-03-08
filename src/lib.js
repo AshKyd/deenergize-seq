@@ -74,20 +74,17 @@ export function getPosts(json, state) {
   const { incidentCount, incidentTypes, affectedCustomers, parsedIncidents } =
     parse(json);
 
-  state.knownIncidents = parsedIncidents;
   const posts = [];
 
   if (!state.seenIncidents) {
     state.seenIncidents = parsedIncidents.map((incident) => incident.id);
   }
 
-  const resolvedIncidents = state.knownIncidents.filter(
-    (knownIncident) =>
-      !parsedIncidents.find(
-        (newIncident) => newIncident.id === knownIncident.id
-      )
+  const newIncidentIds = parsedIncidents.map((incident) => incident.id);
+  const resolvedIncidents = (state.knownIncidents || []).filter(
+    (knownIncident) => !newIncidentIds.includes(knownIncident.id)
   );
-  console.log("resolved incidents", resolvedIncidents);
+  state.knownIncidents = parsedIncidents;
 
   const newIncidents = parsedIncidents.filter(
     (incident) => !state.seenIncidents.includes(incident.id)
@@ -103,31 +100,32 @@ export function getPosts(json, state) {
     state.lastSummary = Date.now();
   }
 
-  if (!newIncidents.length) {
-    return { posts: [], state };
+  if (newIncidents.length) {
+    const getSinglePost = (incident) =>
+      `New power outage out for ${incident.customersAffected} customers at ${incident.suburbs}: ${incident.reason}`;
+
+    if (newIncidents.length > 1) {
+      const post = [
+        `${newIncidents.length} new outages:`,
+        newIncidents
+          .map(
+            (incident) =>
+              `- ${incident.customersAffected} customers at ${incident.suburbs}`
+          )
+          .join("\n"),
+      ].join("\n");
+      // if it fits in a Bluesky skeet
+      if (post.length < 300) {
+        posts.push(post);
+      } else {
+        posts.push(...newIncidents.map(getSinglePost));
+      }
+    } else {
+      posts.push(getSinglePost(newIncidents[0]));
+    }
   }
 
-  const getSinglePost = (incident) =>
-    `New power outage out for ${incident.customersAffected} customers at ${incident.suburbs}: ${incident.reason}`;
-
-  if (newIncidents.length > 1) {
-    const post = [
-      `${newIncidents.length} new outages:`,
-      newIncidents
-        .map(
-          (incident) =>
-            `- ${incident.customersAffected} customers at ${incident.suburbs}`
-        )
-        .join("\n"),
-    ].join("\n");
-    // if it fits in a Bluesky skeet
-    if (post.length < 300) {
-      posts.push(post);
-    } else {
-      posts.push(...newIncidents.map(getSinglePost));
-    }
-  } else {
-    posts.push(getSinglePost(newIncidents[0]));
+  if (resolvedIncidents.length) {
   }
 
   if (shouldPostSummary) {
