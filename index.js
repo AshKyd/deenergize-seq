@@ -33,8 +33,8 @@ try {
     for (thisPost of posts) {
       await post(thisPost);
     }
+    write("state.json", JSON.stringify(state));
   })();
-  write("state.json", JSON.stringify(state));
 } catch (e) {
   console.error("error: ", e.message);
 }
