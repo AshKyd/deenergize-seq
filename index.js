@@ -2,6 +2,7 @@ import child_process from "child_process";
 import { read, write } from "./src/fs.js";
 import { getPosts } from "./src/lib.js";
 import { post } from "./src/post.js";
+import { __dirname } from "./src/utils.js";
 
 const existingState = (() => {
   try {
@@ -16,7 +17,8 @@ console.log("Checking…", new Date());
 console.time("Fetching json");
 try {
   child_process.execSync(
-    'wget "https://www.energex.com.au/static/Energex/energex_po_current_unplanned.geojson" -O latest.json'
+    'wget "https://www.energex.com.au/static/Energex/energex_po_current_unplanned.geojson" -O latest.json',
+    { cwd: __dirname }
   );
 } catch (e) {
   console.error(`Could not fetch json. ${e.message}`);
