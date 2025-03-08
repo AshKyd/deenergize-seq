@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/*.js"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "@atproto/api": "^0.14.7",
-    "masto": "^6.10.3"
+    "masto": "^6.10.3",
+    "mocha": "^11.1.0"
   },
   "type": "module"
 }
