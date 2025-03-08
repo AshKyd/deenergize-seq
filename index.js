@@ -4,9 +4,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { BskyAgent } from "@atproto/api";
 
-/** 1 hr between summary posts */
-const SUMMARY_TIME = 1000*60*60
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const secrets = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, "./secrets.json"))
@@ -152,7 +149,7 @@ async function go() {
   state.seenIncidents.push(...newIncidents.map((incident) => incident.id));
   const shouldPostSummary =
     newIncidents.length &&
-    (!state.lastSummary || state.lastSummary < Date.now() - SUMMARY_TIME);
+    (!state.lastSummary || state.lastSummary < Date.now() - 1000 * 60 * 10);
   if (shouldPostSummary) {
     state.lastSummary = Date.now();
   }
