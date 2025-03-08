@@ -17,7 +17,7 @@ console.log("Checking…", new Date());
 console.time("Fetching json");
 try {
   child_process.execSync(
-    'wget "https://www.energex.com.au/static/Energex/energex_po_current_unplanned.geojson" -O latest.json --timeout 180 --compression=type',
+    'wget "https://www.energex.com.au/static/Energex/energex_po_current_unplanned.geojson" -O latest.json --timeout 180 --compression=auto',
     { cwd: __dirname }
   );
 } catch (e) {
