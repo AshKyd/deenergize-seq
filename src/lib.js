@@ -42,6 +42,57 @@ function parseIncident(incident) {
   };
 }
 
+function getOutagePosts(newIncidents) {
+  if (!newIncidents.length) return [];
+
+  const getSinglePost = (incident) =>
+    `New power outage out for ${incident.customersAffected} customers at ${incident.suburbs}: ${incident.reason}`;
+
+  if (newIncidents.length > 5) {
+    const customerCount = newIncidents.reduce(
+      (count, incident) => count + incident.customersAffected,
+      0
+    );
+    const suburbNames = Array.from(
+      new Set(
+        newIncidents.reduce(
+          (suburbs, incident) => [...suburbs, ...incident.suburbs.split(", ")],
+          []
+        )
+      )
+    );
+    const sumamryPost = `There were ${newIncidents.length} new outages affecting ${customerCount} customers since the last check.`;
+    const longPost = `${sumamryPost} Affected suburbs include: ${suburbNames.join(
+      ", "
+    )}.`;
+    if (longPost.length <= 300) {
+      return [longPost];
+    } else {
+      return [sumamryPost];
+    }
+  }
+
+  if (newIncidents.length > 1) {
+    const post = [
+      `${newIncidents.length} new outages:`,
+      newIncidents
+        .map(
+          (incident) =>
+            `- ${incident.customersAffected} customers at ${incident.suburbs}`
+        )
+        .join("\n"),
+    ].join("\n");
+    // if it fits in a Bluesky skeet
+    if (post.length <= 300) {
+      return [post];
+    } else {
+      return newIncidents.map(getSinglePost);
+    }
+  } else {
+    return [getSinglePost(newIncidents[0])];
+  }
+}
+
 function parse(geojson) {
   const incidentCount = geojson.features.length;
   const parsedIncidents = geojson.features.map(parseIncident);
@@ -100,30 +151,7 @@ export function getPosts(json, state) {
     state.lastSummary = Date.now();
   }
 
-  if (newIncidents.length) {
-    const getSinglePost = (incident) =>
-      `New power outage out for ${incident.customersAffected} customers at ${incident.suburbs}: ${incident.reason}`;
-
-    if (newIncidents.length > 1) {
-      const post = [
-        `${newIncidents.length} new outages:`,
-        newIncidents
-          .map(
-            (incident) =>
-              `- ${incident.customersAffected} customers at ${incident.suburbs}`
-          )
-          .join("\n"),
-      ].join("\n");
-      // if it fits in a Bluesky skeet
-      if (post.length < 300) {
-        posts.push(post);
-      } else {
-        posts.push(...newIncidents.map(getSinglePost));
-      }
-    } else {
-      posts.push(getSinglePost(newIncidents[0]));
-    }
-  }
+  posts.push(...getOutagePosts(newIncidents));
 
   if (resolvedIncidents.length) {
   }

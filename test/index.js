@@ -2,23 +2,36 @@
 import assert from "assert";
 import { getPosts } from "../src/lib.js";
 
+const RUSSEL_ISLAND = {
+  type: "Feature",
+  geometries: [],
+  properties: {
+    EVENT_ID: "INCD-829170-g",
+    TYPE: "UNPLANNED",
+    CUSTOMERS_AFFECTED: "263",
+    REASON: "Under Investigation",
+    STATUS: "Awaiting",
+    SUBURBS: "RUSSELL ISLAND",
+  },
+};
+
+const BONOGIN = {
+  type: "Feature",
+  geometries: [],
+  properties: {
+    EVENT_ID: "INCD-829171-g",
+    TYPE: "UNPLANNED",
+    CUSTOMERS_AFFECTED: "104",
+    REASON: "Under Investigation",
+    STATUS: "Awaiting",
+    SUBURBS: "BONOGIN",
+  },
+};
+
 describe("parse", () => {
   it("single post", () => {
     const newJson = {
-      features: [
-        {
-          type: "Feature",
-          geometries: [],
-          properties: {
-            EVENT_ID: "INCD-829170-g",
-            TYPE: "UNPLANNED",
-            CUSTOMERS_AFFECTED: "263",
-            REASON: "Under Investigation",
-            STATUS: "Awaiting",
-            SUBURBS: "RUSSELL ISLAND",
-          },
-        },
-      ],
+      features: [RUSSEL_ISLAND],
     };
     const res = getPosts(newJson, {
       seenIncidents: [],
@@ -34,32 +47,7 @@ describe("parse", () => {
   });
   it("multiple posts", () => {
     const newJson = {
-      features: [
-        {
-          type: "Feature",
-          geometries: [],
-          properties: {
-            EVENT_ID: "INCD-829170-g",
-            TYPE: "UNPLANNED",
-            CUSTOMERS_AFFECTED: "263",
-            REASON: "Under Investigation",
-            STATUS: "Awaiting",
-            SUBURBS: "RUSSELL ISLAND",
-          },
-        },
-        {
-          type: "Feature",
-          geometries: [],
-          properties: {
-            EVENT_ID: "INCD-829171-g",
-            TYPE: "UNPLANNED",
-            CUSTOMERS_AFFECTED: "104",
-            REASON: "Under Investigation",
-            STATUS: "Awaiting",
-            SUBURBS: "BONOGIN",
-          },
-        },
-      ],
+      features: [RUSSEL_ISLAND, BONOGIN],
     };
     const res = getPosts(newJson, {
       seenIncidents: [],
@@ -72,6 +60,10 @@ describe("parse", () => {
   it("multiple posts when too big for BS", () => {
     const newJson = {
       features: [
+        RUSSEL_ISLAND,
+        BONOGIN,
+        RUSSEL_ISLAND,
+        BONOGIN,
         {
           type: "Feature",
           geometries: [],
@@ -81,67 +73,7 @@ describe("parse", () => {
             CUSTOMERS_AFFECTED: "263",
             REASON: "Under Investigation",
             STATUS: "Awaiting",
-            SUBURBS: "BILINGA, BROADBEACH, COOLANGATTA, TUGUN",
-          },
-        },
-        {
-          type: "Feature",
-          geometries: [],
-          properties: {
-            EVENT_ID: "INCD-829171-g",
-            TYPE: "UNPLANNED",
-            CUSTOMERS_AFFECTED: "104",
-            REASON: "Under Investigation",
-            STATUS: "Awaiting",
-            SUBURBS: "ADVANCETOWN, MUDGEERABA, TALLAI",
-          },
-        },
-        {
-          type: "Feature",
-          geometries: [],
-          properties: {
-            EVENT_ID: "INCD-829170-g",
-            TYPE: "UNPLANNED",
-            CUSTOMERS_AFFECTED: "263",
-            REASON: "Under Investigation",
-            STATUS: "Awaiting",
-            SUBURBS: "BILINGA, BROADBEACH, COOLANGATTA, TUGUN",
-          },
-        },
-        {
-          type: "Feature",
-          geometries: [],
-          properties: {
-            EVENT_ID: "INCD-829171-g",
-            TYPE: "UNPLANNED",
-            CUSTOMERS_AFFECTED: "104",
-            REASON: "Under Investigation",
-            STATUS: "Awaiting",
-            SUBURBS: "ADVANCETOWN, MUDGEERABA, TALLAI",
-          },
-        },
-        {
-          type: "Feature",
-          geometries: [],
-          properties: {
-            EVENT_ID: "INCD-829170-g",
-            TYPE: "UNPLANNED",
-            CUSTOMERS_AFFECTED: "263",
-            REASON: "Under Investigation",
-            STATUS: "Awaiting",
-            SUBURBS: "BILINGA, BROADBEACH, COOLANGATTA, TUGUN",
-          },
-        },
-        {
-          type: "Feature",
-          geometries: [],
-          properties: {
-            EVENT_ID: "INCD-829171-g",
-            TYPE: "UNPLANNED",
-            CUSTOMERS_AFFECTED: "104",
-            REASON: "Under Investigation",
-            STATUS: "Awaiting",
-            SUBURBS: "ADVANCETOWN, MUDGEERABA, TALLAI",
+            SUBURBS: "RUSSELL ISLAND, ".repeat(20),
           },
         },
       ],
@@ -151,12 +83,34 @@ describe("parse", () => {
       lastSummary: Date.now(),
     });
     assert.deepEqual(res.posts, [
-      "New power outage out for 263 customers at BILINGA, BROADBEACH, COOLANGATTA, TUGUN: Under Investigation",
-      "New power outage out for 104 customers at ADVANCETOWN, MUDGEERABA, TALLAI: Under Investigation",
-      "New power outage out for 263 customers at BILINGA, BROADBEACH, COOLANGATTA, TUGUN: Under Investigation",
-      "New power outage out for 104 customers at ADVANCETOWN, MUDGEERABA, TALLAI: Under Investigation",
-      "New power outage out for 263 customers at BILINGA, BROADBEACH, COOLANGATTA, TUGUN: Under Investigation",
-      "New power outage out for 104 customers at ADVANCETOWN, MUDGEERABA, TALLAI: Under Investigation",
+      "New power outage out for 263 customers at RUSSELL ISLAND: Under Investigation",
+      "New power outage out for 104 customers at BONOGIN: Under Investigation",
+      "New power outage out for 263 customers at RUSSELL ISLAND: Under Investigation",
+      "New power outage out for 104 customers at BONOGIN: Under Investigation",
+      "New power outage out for 263 customers at RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, RUSSELL ISLAND, : Under Investigation",
+    ]);
+  });
+  it(">5 posts, small enough to fit in one message", () => {
+    const newJson = {
+      features: [
+        RUSSEL_ISLAND,
+        BONOGIN,
+        RUSSEL_ISLAND,
+        BONOGIN,
+        RUSSEL_ISLAND,
+        BONOGIN,
+        RUSSEL_ISLAND,
+        BONOGIN,
+        RUSSEL_ISLAND,
+        BONOGIN,
+      ],
+    };
+    const res = getPosts(newJson, {
+      seenIncidents: [],
+      lastSummary: Date.now(),
+    });
+    assert.deepEqual(res.posts, [
+      "There were 10 new outages affecting 1835 customers since the last check. Affected suburbs include: RUSSELL ISLAND, BONOGIN.",
     ]);
   });
 });
