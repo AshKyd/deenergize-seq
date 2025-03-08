@@ -66,7 +66,7 @@ describe("parse", () => {
       lastSummary: Date.now(),
     });
     assert.deepEqual(res.posts, [
-      "2 new outages.\n* 263 customers at RUSSELL ISLAND\n* 104 customers at BONOGIN",
+      "2 new outages:\n- 263 customers at RUSSELL ISLAND\n- 104 customers at BONOGIN",
     ]);
   });
   it("multiple posts when too big for BS", () => {

@@ -112,11 +112,11 @@ export function getPosts(json, state) {
 
   if (newIncidents.length > 1) {
     const post = [
-      `${newIncidents.length} new outages.`,
+      `${newIncidents.length} new outages:`,
       newIncidents
         .map(
           (incident) =>
-            `* ${incident.customersAffected} customers at ${incident.suburbs}`
+            `- ${incident.customersAffected} customers at ${incident.suburbs}`
         )
         .join("\n"),
     ].join("\n");
