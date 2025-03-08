@@ -1,4 +1,4 @@
-import { go } from "./src/lib.js";
+import { getPosts } from "./src/lib.js";
 import { post } from "./src/post.js";
 
 const state = (() => {
@@ -13,7 +13,7 @@ fetch(
   "https://www.energex.com.au/static/Energex/energex_po_current_unplanned.geojson"
 )
   .then((res) => res.json())
-  .then((newJson) => go(newJson, state))
+  .then((newJson) => getPosts(newJson, state))
   .then((posts, state) => {
     posts.forEach(post);
     write("state.json", JSON.stringify(state));
