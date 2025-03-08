@@ -1,8 +1,47 @@
 /** 1 hr between summary posts */
 const SUMMARY_TIME = 1000 * 60 * 60;
 
+function getDistance(time) {
+  const diff = Number(Date.now()) - time;
+  const minutes = Math.round(diff / (1000 * 60));
+  if (minutes < 120) {
+    return `${minutes} ${pluralise(minutes, "minute", "minutes")}`;
+  }
+  const hours = Math.round(minutes / 60);
+  return `${hours} ${pluralise(hours, "hour", "hours")}`;
+}
+
+function parseDate(start) {
+  const months = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+  ];
+  const [_, hour, minute, ampm, day, monthName, year] = start.match(
+    /^(\d\d?):(\d\d)(..) (\d\d) (\w+) (\d\d\d\d)$/
+  );
+  const month = months.indexOf(monthName.toLowerCase()) + 1;
+
+  const hour24 = ampm === "PM" ? Number(hour) + 12 : Number(hour);
+
+  const dateString = `${year}-${String(month).padStart(2, "0")}-${day}T${String(
+    hour24
+  ).padStart(2, 0)}:${minute}:00.000+1000`;
+
+  return new Date(dateString);
+}
+
 function parseIncident(incident) {
-  const { EVENT_ID, CUSTOMERS_AFFECTED, REASON, STATUS, SUBURBS } =
+  const { EVENT_ID, CUSTOMERS_AFFECTED, REASON, STATUS, SUBURBS, START } =
     incident.properties;
   const lowercaseReason = REASON.toLowerCase();
   let unifiedReason = "other";
@@ -39,6 +78,7 @@ function parseIncident(incident) {
     status: STATUS,
     unifiedReason,
     incident: incident,
+    start: Number(parseDate(START)),
   };
 }
 
@@ -61,14 +101,14 @@ function getOutagePosts(newIncidents) {
         )
       )
     );
-    const sumamryPost = `There were ${newIncidents.length} new outages affecting ${customerCount} customers since the last check.`;
-    const longPost = `${sumamryPost} Affected suburbs include: ${suburbNames.join(
+    const summaryPost = `There were ${newIncidents.length} new outages affecting ${customerCount} customers since the last check.`;
+    const longPost = `${summaryPost} Affected suburbs include: ${suburbNames.join(
       ", "
     )}.`;
     if (longPost.length <= 300) {
       return [longPost];
     } else {
-      return [sumamryPost];
+      return [summaryPost];
     }
   }
 
@@ -90,6 +130,63 @@ function getOutagePosts(newIncidents) {
     }
   } else {
     return [getSinglePost(newIncidents[0])];
+  }
+}
+
+function getResolutionPosts(resolvedIncidents) {
+  if (!resolvedIncidents.length) return [];
+
+  const getSinglePost = (incident) =>
+    `Power restored for ${incident.customersAffected} ${
+      (pluralise(incident.customersAffected), "customer", "customers")
+    } after ${getDistance(incident.start)} at ${incident.suburbs}`;
+
+  if (resolvedIncidents.length > 5) {
+    const customerCount = resolvedIncidents.reduce(
+      (count, incident) => count + incident.customersAffected,
+      0
+    );
+    const suburbNames = Array.from(
+      new Set(
+        resolvedIncidents.reduce(
+          (suburbs, incident) => [...suburbs, ...incident.suburbs.split(", ")],
+          []
+        )
+      )
+    );
+    const summaryPost = `Power was restored for ${resolvedIncidents.length} incidents affecting ${customerCount} customers since the last check.`;
+    const longPost = `${summaryPost} Affected suburbs include: ${suburbNames.join(
+      ", "
+    )}.`;
+    if (longPost.length <= 300) {
+      return [longPost];
+    } else {
+      return [summaryPost];
+    }
+  }
+
+  if (resolvedIncidents.length > 1) {
+    const post = [
+      `${resolvedIncidents.length} outages were resolved:`,
+      resolvedIncidents
+        .map(
+          (incident) =>
+            `- ${incident.customersAffected} ${pluralise(
+              incident.customersAffected,
+              "customer",
+              "customers"
+            )} at ${incident.suburbs}`
+        )
+        .join("\n"),
+    ].join("\n");
+    // if it fits in a Bluesky skeet
+    if (post.length <= 300) {
+      return [post];
+    } else {
+      return resolvedIncidents.map(getSinglePost);
+    }
+  } else {
+    return [getSinglePost(resolvedIncidents[0])];
   }
 }
 
@@ -152,8 +249,7 @@ export function getPosts(json, state) {
 
   posts.push(...getOutagePosts(newIncidents));
 
-  if (resolvedIncidents.length) {
-  }
+  posts.push(...getResolutionPosts(resolvedIncidents));
 
   if (shouldPostSummary) {
     const summary = `Currently in Southeast Queensland there ${pluralise(

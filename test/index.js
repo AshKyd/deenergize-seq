@@ -12,6 +12,7 @@ const RUSSEL_ISLAND = {
     REASON: "Under Investigation",
     STATUS: "Awaiting",
     SUBURBS: "RUSSELL ISLAND",
+    START: "11:29PM 05 Mar 2020",
   },
 };
 
@@ -25,6 +26,7 @@ const BONOGIN = {
     REASON: "Under Investigation",
     STATUS: "Awaiting",
     SUBURBS: "BONOGIN",
+    START: "11:29PM 05 Mar 2020",
   },
 };
 
@@ -43,7 +45,11 @@ describe("parse", () => {
     ]);
 
     const secondRes = getPosts({ features: [] }, res.state);
-    assert.deepEqual(secondRes.posts, []);
+    assert.deepEqual(secondRes.posts.length, 1);
+    assert.match(
+      secondRes.posts[0],
+      /Power restored for 263 customers after \d+ hours at RUSSELL ISLAND/
+    );
   });
   it("multiple posts", () => {
     const newJson = {
@@ -74,6 +80,7 @@ describe("parse", () => {
             REASON: "Under Investigation",
             STATUS: "Awaiting",
             SUBURBS: "RUSSELL ISLAND, ".repeat(20),
+            START: "11:29PM 05 Mar 2020",
           },
         },
       ],
