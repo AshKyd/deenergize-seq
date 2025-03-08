@@ -28,7 +28,11 @@ console.timeEnd("Fetching json");
 try {
   const newJson = JSON.parse(read("latest.json"));
   const { posts, state } = getPosts(newJson, existingState);
-  posts.forEach(console.log);
+  (async () => {
+    for (thisPost of posts) {
+      await console.log(thisPost);
+    }
+  })();
   write("state.json", JSON.stringify(state));
 } catch (e) {
   console.error("error: ", e.message);

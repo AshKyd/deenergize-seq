@@ -10,7 +10,7 @@ export async function post(status) {
 
   console.log("tooting", status);
 
-  masto.v1.statuses
+  await masto.v1.statuses
     .create({
       status: status,
       visibility: "unlisted",
@@ -22,7 +22,7 @@ export async function post(status) {
   const agent = new BskyAgent({
     service: "https://bsky.social",
   });
-  agent
+  await agent
     .login({
       identifier: secrets.bskyUser,
       password: secrets.bskyPass,
