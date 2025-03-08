@@ -81,6 +81,14 @@ export function getPosts(json, state) {
     state.seenIncidents = parsedIncidents.map((incident) => incident.id);
   }
 
+  const resolvedIncidents = state.knownIncidents.filter(
+    (knownIncident) =>
+      !parsedIncidents.find(
+        (newIncident) => newIncident.id === knownIncident.id
+      )
+  );
+  console.log("resolved incidents", resolvedIncidents);
+
   const newIncidents = parsedIncidents.filter(
     (incident) => !state.seenIncidents.includes(incident.id)
   );
