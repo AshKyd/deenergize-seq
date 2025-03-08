@@ -39,7 +39,7 @@ describe("parse", () => {
     });
     assert.deepEqual(res.posts, [
       "New power outage out for 263 customers at RUSSELL ISLAND: Under Investigation",
-      "1 incident, 263 customers without power. Causes: TBD: 1.",
+      "Currently in Southeast Queensland there is 1 incident and 263 customers without power. Causes: TBD: 1.",
     ]);
 
     const secondRes = getPosts({ features: [] }, res.state);

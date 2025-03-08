@@ -1,8 +1,9 @@
+import child_process from "child_process";
 import { read, write } from "./src/fs.js";
 import { getPosts } from "./src/lib.js";
 import { post } from "./src/post.js";
 
-const state = (() => {
+const existingState = (() => {
   try {
     return JSON.parse(read("state.json"));
   } catch (e) {
@@ -11,21 +12,22 @@ const state = (() => {
   }
 })();
 
-fetch(
-  "https://www.energex.com.au/static/Energex/energex_po_current_unplanned.geojson"
-)
-  .then((res) => {
-    if (res.status !== 200) {
-      throw new Error(`HTTP status ${res.status}`);
-    }
-    return res.json();
-  })
-  .then((newJson) => getPosts(newJson, state))
-  .then(({ posts, state }) => {
-    posts.forEach(post);
-    write("state.json", JSON.stringify(state));
-  })
-  .catch((e) => {
-    console.error("hit error", e.message);
-    console.error(e);
-  });
+console.log("Checking…", new Date());
+console.time("Fetching json");
+try {
+  child_process.execSync(
+    'wget "https://www.energex.com.au/static/Energex/energex_po_current_unplanned.geojson" -O latest.json'
+  );
+} catch (e) {
+  console.error(`Could not fetch json. ${e.message}`);
+  process.exit();
+}
+console.timeEnd("Fetching json");
+try {
+  const newJson = JSON.parse(read("latest.json"));
+  const { posts, state } = getPosts(newJson, existingState);
+  posts.forEach(post);
+  write("state.json", JSON.stringify(state));
+} catch (e) {
+  console.error("error: ", e.message);
+}

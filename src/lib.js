@@ -120,7 +120,6 @@ function pluralise(count, singular, plural) {
 }
 
 export function getPosts(json, state) {
-  console.log("Starting fetch", new Date());
   //   const json = JSON.parse(fs.readFileSync("./example.json"));
   const { incidentCount, incidentTypes, affectedCustomers, parsedIncidents } =
     parse(json);
@@ -157,11 +156,15 @@ export function getPosts(json, state) {
   }
 
   if (shouldPostSummary) {
-    const summary = `${incidentCount} ${pluralise(
+    const summary = `Currently in Southeast Queensland there ${pluralise(
+      incidentCount,
+      "is",
+      "are"
+    )} ${incidentCount} ${pluralise(
       incidentCount,
       "incident",
       "incidents"
-    )}, ${affectedCustomers} ${pluralise(
+    )} and ${affectedCustomers} ${pluralise(
       affectedCustomers,
       "customer",
       "customers"
