@@ -18,11 +18,21 @@ function pickBestPost(options) {
   );
 }
 
-function getOverview(newJson) {
+function getOverview(newJson, existingState) {
   const totalOutageCustomers = newJson.reduce(
     (count, suburb) => count + suburb.customersAffected,
     0
   );
+
+  if (totalOutageCustomers === 0) {
+    if (existingState.noOutages) {
+      return [];
+    }
+    existingState.noOutages = true;
+  } else {
+    existingState.noOutages = false;
+  }
+
   const totalSuburbs = newJson.map((suburb) => suburb.name);
 
   const shortOverview = `Currently in Southeast Queensland there are ${totalOutageCustomers.toLocaleString(
@@ -51,19 +61,28 @@ function getOverview(newJson) {
       : "";
 
   const overviews = [
-    `${shortOverview}, across ${totalSuburbs.join(", ")}. ${mostAffectedText}`,
-    `${shortOverview}, across ${totalSuburbs.join(", ")}.`,
-    `${shortOverview}, across ${totalSuburbs.length.toLocaleString(
-      "en-AU"
-    )} ${pluralise(
-      totalSuburbs.length,
-      "suburb",
-      "suburbs"
-    )}.${mostAffectedText}`,
-    `${shortOverview}, across ${totalSuburbs.length.toLocaleString(
-      "en-AU"
-    )} ${pluralise(totalSuburbs.length, "suburb", "suburbs")}.`,
-  ].map((post) => [post]);
+    totalSuburbs.length &&
+      `${shortOverview}, across ${totalSuburbs.join(
+        ", "
+      )}. ${mostAffectedText}`,
+    totalSuburbs.length &&
+      `${shortOverview}, across ${totalSuburbs.join(", ")}.`,
+    totalSuburbs.length &&
+      `${shortOverview}, across ${totalSuburbs.length.toLocaleString(
+        "en-AU"
+      )} ${pluralise(
+        totalSuburbs.length,
+        "suburb",
+        "suburbs"
+      )}.${mostAffectedText}`,
+    totalSuburbs.length &&
+      `${shortOverview}, across ${totalSuburbs.length.toLocaleString(
+        "en-AU"
+      )} ${pluralise(totalSuburbs.length, "suburb", "suburbs")}.`,
+    shortOverview,
+  ]
+    .filter(Boolean)
+    .map((post) => [post]);
   return overviews;
 }
 
@@ -161,12 +180,13 @@ export function getPosts(newJson, existingState) {
     !existingState.lastOverview ||
     existingState.lastOverview < Date.now() - OVERVIEW_TIME;
   if (shouldPostOverview) {
-    posts.push(...pickBestPost(getOverview(newJson)));
+    posts.push(...pickBestPost(getOverview(newJson, existingState)));
   }
 
   return {
     posts,
     state: {
+      ...existingState,
       lastCheck: Date.now(),
       lastData: newJson,
       lastOverview: shouldPostOverview

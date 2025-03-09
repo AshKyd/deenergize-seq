@@ -1,7 +1,6 @@
 import child_process from "child_process";
 import { read, write } from "./src/fs.js";
 import { getPosts } from "./src/lib.js";
-import { post } from "./src/post.js";
 import { __dirname } from "./src/utils.js";
 
 const existingState = (() => {
