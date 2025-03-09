@@ -15,25 +15,22 @@ const existingState = (() => {
 
 console.log("Checking…", new Date());
 console.time("Fetching json");
-// try {
-//   child_process.execSync(
-//     'wget "https://www.energex.com.au/static/Energex/energex_po_current_unplanned.geojson" -O latest.json --timeout 180 --compression=auto',
-//     { cwd: __dirname }
-//   );
-// } catch (e) {
-//   console.error(`Could not fetch json. ${e.message}`);
-//   process.exit();
-// }
-console.timeEnd("Fetching json");
 try {
-  const newJson = JSON.parse(read("latest.json"));
-  const { posts, state } = getPosts(newJson, existingState);
-  (async () => {
-    for (thisPost of posts) {
-      await console.log(thisPost);
-    }
-  })();
-  write("state.json", JSON.stringify(state));
+  child_process.execSync(
+    'wget "https://www.abc.net.au/dat/news/alfred-power-outages/energex-summary-suburbs.json" -O latest-text.json --timeout 20 --compression=auto',
+    { cwd: __dirname }
+  );
 } catch (e) {
-  console.error("error: ", e.message);
+  console.error(`Could not fetch json. ${e.message}`);
+  process.exit();
 }
+console.timeEnd("Fetching json");
+const newJson = JSON.parse(read("latest-text.json")).data;
+const { posts, state } = getPosts(newJson, existingState);
+
+(async () => {
+  for (let thisPost of posts) {
+    console.log("post:", thisPost);
+  }
+  write("state.json", JSON.stringify(state));
+})();

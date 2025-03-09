@@ -102,7 +102,7 @@ export function getPosts(newJson, existingState) {
     });
 
   return {
-    posts: options[0],
+    posts: options[0] || [],
     state: { lastCheck: Number(Date.now()), lastData: newJson },
   };
 }
