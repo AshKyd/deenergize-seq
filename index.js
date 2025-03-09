@@ -17,7 +17,7 @@ console.log("Checking…", new Date());
 console.time("Fetching json");
 try {
   child_process.execSync(
-    'wget "https://www.abc.net.au/dat/news/alfred-power-outages/energex-summary-suburbs.json" -O latest-text.json --timeout 20 --compression=auto',
+    'wget "https://raw.githubusercontent.com/drzax/ausgrid-outages/refs/heads/main/energex-summary-suburbs.json" -O latest-text.json --timeout 20 --compression=auto',
     { cwd: __dirname }
   );
 } catch (e) {
