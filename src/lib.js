@@ -1,16 +1,73 @@
+const OVERVIEW_TIME = 1000 * 60 * 60;
+
 function pluralise(count, singular, plural) {
   if (count === 1) {
     return singular;
   }
   return plural;
 }
-export function getPosts(newJson, existingState) {
-  if (!existingState?.lastData) {
-    return {
-      posts: [],
-      state: { lastCheck: Number(Date.now()), lastData: newJson },
-    };
-  }
+
+function pickBestPost(options) {
+  return (
+    options.filter((option) => {
+      if (option.some((post) => post.length > 300)) {
+        return false;
+      }
+      return true;
+    })[0] || []
+  );
+}
+
+function getOverview(newJson) {
+  const totalOutageCustomers = newJson.reduce(
+    (count, suburb) => count + suburb.customersAffected,
+    0
+  );
+  const totalSuburbs = newJson.map((suburb) => suburb.name);
+
+  const shortOverview = `Currently in Southeast Queensland there are ${totalOutageCustomers.toLocaleString(
+    "en-AU"
+  )} customers without power`;
+
+  const mostAffected = newJson.reduce((biggest, suburb) => {
+    if (!biggest) return suburb;
+    if (suburb.customersAffected > biggest.customersAffected) {
+      return suburb;
+    }
+    return biggest;
+  }, null);
+
+  const mostAffectedText =
+    newJson.length > 3
+      ? ` ${
+          mostAffected.name
+        } is the most affected suburb having ${mostAffected.customersAffected.toLocaleString(
+          "en-AU"
+        )} ${pluralise(
+          mostAffected.customersAffected,
+          "customer",
+          "customers"
+        )} without power.`
+      : "";
+
+  const overviews = [
+    `${shortOverview}, across ${totalSuburbs.join(", ")}. ${mostAffectedText}`,
+    `${shortOverview}, across ${totalSuburbs.join(", ")}.`,
+    `${shortOverview}, across ${totalSuburbs.length.toLocaleString(
+      "en-AU"
+    )} ${pluralise(
+      totalSuburbs.length,
+      "suburb",
+      "suburbs"
+    )}.${mostAffectedText}`,
+    `${shortOverview}, across ${totalSuburbs.length.toLocaleString(
+      "en-AU"
+    )} ${pluralise(totalSuburbs.length, "suburb", "suburbs")}.`,
+  ].map((post) => [post]);
+  return overviews;
+}
+
+function getUpdate(newJson, existingState) {
   const newOutages = [];
   const newResolutions = [];
 
@@ -56,18 +113,14 @@ export function getPosts(newJson, existingState) {
 
   const shortResolution =
     resolvedCustomers &&
-    `✅ Outages resolved for ${resolvedCustomers} ${pluralise(
-      resolvedCustomers,
-      "customer",
-      "customers"
-    )}`;
+    `✅ Power restored for ${resolvedCustomers.toLocaleString(
+      "en-AU"
+    )} ${pluralise(resolvedCustomers, "customer", "customers")}`;
   const shortOutage =
     newOutageCustomers &&
-    `⚡️ New outages for ${newOutageCustomers} ${pluralise(
-      newOutageCustomers,
-      "customer",
-      "customers"
-    )}`;
+    `⚡️ New power outages for ${newOutageCustomers.toLocaleString(
+      "en-AU"
+    )} ${pluralise(newOutageCustomers, "customer", "customers")}`;
 
   const longResolution =
     resolvedCustomers &&
@@ -92,17 +145,33 @@ export function getPosts(newJson, existingState) {
     longResolution && [longResolution],
     shortOutage && [shortOutage],
     shortResolution && [shortResolution],
-  ]
-    .filter(Boolean)
-    .filter((option) => {
-      if (option.some((post) => post.length > 300)) {
-        return false;
-      }
-      return true;
-    });
+  ].filter(Boolean);
+  return options;
+}
+export function getPosts(newJson, existingState) {
+  if (!existingState?.lastData) {
+    return {
+      posts: [],
+      state: { lastCheck: Date.now(), lastData: newJson },
+    };
+  }
+
+  const posts = pickBestPost(getUpdate(newJson, existingState));
+  const shouldPostOverview =
+    !existingState.lastOverview ||
+    existingState.lastOverview < Date.now() - OVERVIEW_TIME;
+  if (shouldPostOverview) {
+    posts.push(...pickBestPost(getOverview(newJson)));
+  }
 
   return {
-    posts: options[0] || [],
-    state: { lastCheck: Number(Date.now()), lastData: newJson },
+    posts,
+    state: {
+      lastCheck: Date.now(),
+      lastData: newJson,
+      lastOverview: shouldPostOverview
+        ? Date.now()
+        : existingState.lastOverview,
+    },
   };
 }
