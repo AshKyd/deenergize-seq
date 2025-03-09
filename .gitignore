@@ -2,3 +2,4 @@ secrets.json
 node_modules
 state.json
 latest.json
+latest-text.json

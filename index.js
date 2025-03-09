@@ -17,7 +17,7 @@ console.log("Checking…", new Date());
 console.time("Fetching json");
 try {
   child_process.execSync(
-    'wget "https://www.energex.com.au/static/Energex/energex_po_current_unplanned.geojson" -O latest.json --timeout 180 --compression=auto',
+    'wget "https://www.abc.net.au/dat/news/alfred-power-outages/energex-summary-suburbs.json" -O latest-text.json --timeout 20 --compression=auto',
     { cwd: __dirname }
   );
 } catch (e) {
@@ -25,16 +25,12 @@ try {
   process.exit();
 }
 console.timeEnd("Fetching json");
-try {
-  const newJson = JSON.parse(read("latest.json"));
-  const { posts, state } = getPosts(newJson, existingState);
+const newJson = JSON.parse(read("latest-text.json")).data;
+const { posts, state } = getPosts(newJson, existingState);
 
-  (async () => {
-    for (thisPost of posts) {
-      await post(thisPost);
-    }
-    write("state.json", JSON.stringify(state));
-  })();
-} catch (e) {
-  console.error("error: ", e.message);
-}
+(async () => {
+  for (let thisPost of posts) {
+    await post(thisPost);
+  }
+  write("state.json", JSON.stringify(state));
+})();
