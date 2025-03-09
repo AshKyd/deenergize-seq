@@ -41,13 +41,13 @@ function getOverview(newJson) {
     newJson.length > 3
       ? ` ${
           mostAffected.name
-        } is the most affected suburb having ${mostAffected.customersAffected.toLocaleString(
+        } is the most impacted suburb with ${mostAffected.customersAffected.toLocaleString(
           "en-AU"
         )} ${pluralise(
           mostAffected.customersAffected,
           "customer",
           "customers"
-        )} without power.`
+        )} affected.`
       : "";
 
   const overviews = [
